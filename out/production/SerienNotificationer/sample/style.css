@@ -1,0 +1,20 @@
+/* Table text should always be white */
+
+.table-cell {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-border-color: gray;
+    -fx-background-insets: 0, 1, 2;
+    -fx-background: -fx-accent;
+    -fx-text-fill: -fx-selection-bar-text;
+}
+
+/* Style for default table rows */
+.defaultTableStyle {
+    -fx-base: rgb(0,0,0);
+    -fx-background-color: rgba(0,0,0,.75);
+}
+
+.highlightedRow {
+    -fx-background-color: brown;
+}
