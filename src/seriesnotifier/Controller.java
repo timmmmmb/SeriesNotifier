@@ -41,6 +41,9 @@ public class Controller {
     private Connection con = null;
     private PreparedStatement pstmt = null;
 
+    private String logdinusername;
+    private int logdinuserid;
+
     /*
      * TODO: when a new association is created the dropdown should be limited to only show the series that are not connected also double check that in the sql code
      * TODO: Create a Client that has a Login
@@ -79,6 +82,14 @@ public class Controller {
         }
     }
 
+
+    public void registerUser(){
+        addNewUser();
+    }
+
+    public void loginUser(){
+
+    }
     /**
      * This Function creates a new entry into the table series
      */

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="seriesnotifier.Controller">
+   <children>
+      <TabPane fx:id="loginPane" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+          <Tab text="Login">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
+                           <children>
+                              <Label text="Login" />
+                              <GridPane hgap="2.0" prefWidth="560.0" vgap="2.0">
+                                 <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="195.0" minWidth="10.0" prefWidth="95.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="305.0" minWidth="10.0" prefWidth="305.0" />
+                                 </columnConstraints>
+                                 <rowConstraints>
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                 </rowConstraints>
+                                 <children>
+                                    <TextField fx:id="username" GridPane.columnIndex="1" />
+                                    <PasswordField fx:id="userpassword" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <Label text="Username" />
+                                    <Label text="Password" GridPane.rowIndex="1" />
+                                 </children>
+                              </GridPane>
+                              <Button mnemonicParsing="false" onMouseClicked="#addNewUser" text="Submit" />
+                           </children>
+                        </VBox>
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+          <Tab text="Register">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0">
+                     <children>
+                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
+                           <children>
+                              <Label text="Create new User" />
+                              <GridPane hgap="2.0" prefWidth="560.0" vgap="2.0">
+                                 <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="195.0" minWidth="10.0" prefWidth="95.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="305.0" minWidth="10.0" prefWidth="305.0" />
+                                 </columnConstraints>
+                                 <rowConstraints>
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                 </rowConstraints>
+                                 <children>
+                                    <TextField fx:id="username" GridPane.columnIndex="1" />
+                                    <TextField fx:id="usermail" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <PasswordField fx:id="userpassword" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <Label text="Username" />
+                                    <Label text="Email" GridPane.rowIndex="1" />
+                                    <Label text="Password" GridPane.rowIndex="2" />
+                                 </children>
+                              </GridPane>
+                              <Button mnemonicParsing="false" onMouseClicked="#addNewUser" text="Submit" />
+                           </children>
+                        </VBox>
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+        </tabs>
+      </TabPane>
+      <TabPane prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" visible="false">
+        <tabs>
+          <Tab text="Table">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="580.0">
+                           <children>
+                              <Label text="Show new Episodes" />
+                              <ComboBox fx:id="usersshow" onAction="#fillTable" onMouseClicked="#updateLists" prefWidth="150.0" />
+                              <TableView fx:id="table" editable="true" onKeyPressed="#deleteRow" prefHeight="200.0" prefWidth="200.0">
+                                 <columns>
+                                    <TableColumn fx:id="trseriesName" minWidth="130.0" prefWidth="-1.0" text="Series">
+                                       <cellValueFactory>
+                                          <PropertyValueFactory property="trseriesname" />
+                                       </cellValueFactory>
+                                    </TableColumn>
+                                    <TableColumn minWidth="100.0" prefWidth="-1.0" text="Current Season">
+                                       <cellValueFactory>
+                                          <PropertyValueFactory property="currentseason" />
+                                       </cellValueFactory>
+                                    </TableColumn>
+                                    <TableColumn minWidth="100.0" prefWidth="-1.0" text="Current Episode">
+                                       <cellValueFactory>
+                                          <PropertyValueFactory property="currentepisode" />
+                                       </cellValueFactory>
+                                    </TableColumn>
+                                    <TableColumn fx:id="truserSeason" minWidth="100.0" prefWidth="-1.0" text="User Season">
+                                       <cellValueFactory>
+                                          <PropertyValueFactory property="usersseason" />
+                                       </cellValueFactory>
+                                    </TableColumn>
+                                    <TableColumn fx:id="truserEpisode" minWidth="100.0" prefWidth="-1.0" text="User Episode">
+                                       <cellValueFactory>
+                                          <PropertyValueFactory property="usersepisode" />
+                                       </cellValueFactory>
+                                    </TableColumn>
+                                 </columns>
+                                 <columnResizePolicy>
+                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                 </columnResizePolicy>
+                              </TableView>
+                           </children>
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                        </VBox>
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+          <Tab text="Add new Series">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+            </content>
+          </Tab>
+        </tabs>
+      </TabPane>
+   </children>
+</AnchorPane>
