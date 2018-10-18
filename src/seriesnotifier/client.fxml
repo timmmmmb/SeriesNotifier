@@ -2,7 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.Tab?>
@@ -38,13 +37,13 @@
                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                  </rowConstraints>
                                  <children>
-                                    <TextField fx:id="username" GridPane.columnIndex="1" />
-                                    <PasswordField fx:id="userpassword" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <TextField fx:id="loginusername" GridPane.columnIndex="1" />
+                                    <PasswordField fx:id="loginuserpassword" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                     <Label text="Username" />
                                     <Label text="Password" GridPane.rowIndex="1" />
                                  </children>
                               </GridPane>
-                              <Button mnemonicParsing="false" onMouseClicked="#addNewUser" text="Submit" />
+                              <Button mnemonicParsing="false" onMouseClicked="#loginUser" text="Submit" />
                            </children>
                         </VBox>
                      </children></AnchorPane>
@@ -76,7 +75,7 @@
                                     <Label text="Password" GridPane.rowIndex="2" />
                                  </children>
                               </GridPane>
-                              <Button mnemonicParsing="false" onMouseClicked="#addNewUser" text="Submit" />
+                              <Button mnemonicParsing="false" onMouseClicked="#registerUser" text="Submit" />
                            </children>
                         </VBox>
                      </children></AnchorPane>
@@ -84,39 +83,38 @@
           </Tab>
         </tabs>
       </TabPane>
-      <TabPane prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" visible="false">
+      <TabPane fx:id="contentPane" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" visible="false">
         <tabs>
           <Tab text="Table">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="580.0">
+                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="580.0" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
                            <children>
                               <Label text="Show new Episodes" />
-                              <ComboBox fx:id="usersshow" onAction="#fillTable" onMouseClicked="#updateLists" prefWidth="150.0" />
-                              <TableView fx:id="table" editable="true" onKeyPressed="#deleteRow" prefHeight="200.0" prefWidth="200.0">
+                              <TableView fx:id="table" editable="true" maxWidth="580.0" minHeight="-Infinity" minWidth="580.0" onKeyPressed="#deleteRow" prefHeight="200.0" prefWidth="580.0">
                                  <columns>
-                                    <TableColumn fx:id="trseriesName" minWidth="130.0" prefWidth="-1.0" text="Series">
+                                    <TableColumn fx:id="trseriesName" maxWidth="178.0" minWidth="178.0" prefWidth="178.0" text="Series">
                                        <cellValueFactory>
                                           <PropertyValueFactory property="trseriesname" />
                                        </cellValueFactory>
                                     </TableColumn>
-                                    <TableColumn minWidth="100.0" prefWidth="-1.0" text="Current Season">
+                                    <TableColumn maxWidth="100.0" minWidth="100.0" prefWidth="-1.0" text="Current Season">
                                        <cellValueFactory>
                                           <PropertyValueFactory property="currentseason" />
                                        </cellValueFactory>
                                     </TableColumn>
-                                    <TableColumn minWidth="100.0" prefWidth="-1.0" text="Current Episode">
+                                    <TableColumn maxWidth="100.0" minWidth="100.0" prefWidth="-1.0" text="Current Episode">
                                        <cellValueFactory>
                                           <PropertyValueFactory property="currentepisode" />
                                        </cellValueFactory>
                                     </TableColumn>
-                                    <TableColumn fx:id="truserSeason" minWidth="100.0" prefWidth="-1.0" text="User Season">
+                                    <TableColumn fx:id="truserSeason" maxWidth="100.0" minWidth="100.0" prefWidth="-1.0" text="User Season">
                                        <cellValueFactory>
                                           <PropertyValueFactory property="usersseason" />
                                        </cellValueFactory>
                                     </TableColumn>
-                                    <TableColumn fx:id="truserEpisode" minWidth="100.0" prefWidth="-1.0" text="User Episode">
+                                    <TableColumn fx:id="truserEpisode" maxWidth="100.0" minWidth="100.0" prefWidth="-1.0" text="User Episode">
                                        <cellValueFactory>
                                           <PropertyValueFactory property="usersepisode" />
                                        </cellValueFactory>

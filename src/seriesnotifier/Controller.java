@@ -29,13 +29,15 @@ public class Controller {
     @FXML
     private ComboBox<String> usersshow;
     @FXML
-    private PasswordField userpassword;
+    private PasswordField userpassword, loginuserpassword;
     @FXML
-    private TextField serieslink, seriesname, seriesepisode, seriesseason, usermail, username;
+    private TextField serieslink, seriesname, seriesepisode, seriesseason, usermail, username, loginusername;
     @FXML
     private TableView<ResultDataType> table;
     @FXML
     private TableColumn<ResultDataType, String> truserSeason, truserEpisode, trseriesName;
+    @FXML
+    private TabPane contentPane, loginPane;
 
     //this objects are used for accessing the DB
     private Connection con = null;
@@ -48,8 +50,6 @@ public class Controller {
      * TODO: when a new association is created the dropdown should be limited to only show the series that are not connected also double check that in the sql code
      * TODO: Create a Client that has a Login
      * TODO: Client add new Series
-     * TODO: Client add Table with series
-     * TODO: Client remove entries
      */
 
     /**
@@ -85,9 +85,38 @@ public class Controller {
 
     public void registerUser(){
         addNewUser();
+        changePanel();
+    }
+
+    private void changePanel(){
+        contentPane.setVisible(true);
+        loginPane.setVisible(false);
     }
 
     public void loginUser(){
+        //checks if user exists
+        Statement stmt;
+        try {
+            if(con == null) {
+                connectDatabase();
+            }
+            stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE password = '"+ loginuserpassword.getText()+"' AND name = '"+loginusername.getText()+"'" );
+
+            while (rs.next()) {
+                logdinuserid = rs.getInt("id");
+                logdinusername = rs.getString("name");;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+        if(logdinusername != null){
+            fillTableClient();
+            changePanel();
+        }
 
     }
     /**
@@ -244,6 +273,31 @@ public class Controller {
         }
     }
 
+    /**
+     * This Function adds fills the Table with the required data from the database
+     */
+    public void fillTableClient(){
+        initialize();
+
+        Statement stmt;
+        try {
+            if(con == null) {
+                connectDatabase();
+            }
+            if(logdinusername==null){
+                return;
+            }
+            stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT  s.name as Series, su.currentseason as 'User Season', su.currentepisode as 'User Episode', s.currentseason as 'Current Season', s.currentepisode as 'Current Episode' FROM series as s LEFT JOIN seriesusers as su ON su.seriesid = s.id WHERE su.personid = " + logdinuserid);
+
+            table.getItems().clear();
+            while (rs.next()) {
+                table.getItems().add(new ResultDataType(rs.getString(1), String.valueOf(rs.getInt(2)), String.valueOf(rs.getInt(3)), rs.getInt(4), rs.getInt(5)));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     /**
      * This Funcition removes the currentrly selected row
      */
