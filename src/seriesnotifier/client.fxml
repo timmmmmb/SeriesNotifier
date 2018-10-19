@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="seriesnotifier.Controller">
+<AnchorPane prefHeight="400.0" prefWidth="600.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="seriesnotifier.Controller">
    <children>
       <TabPane fx:id="loginPane" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
@@ -92,7 +92,7 @@
                         <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="580.0" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
                            <children>
                               <Label text="Show new Episodes" />
-                              <TableView fx:id="table" editable="true" maxWidth="580.0" minHeight="-Infinity" minWidth="580.0" onKeyPressed="#deleteRow" prefHeight="200.0" prefWidth="580.0">
+                              <TableView fx:id="table" editable="true" maxWidth="580.0" minHeight="-Infinity" minWidth="580.0" onKeyPressed="#deleteRow" prefHeight="300.0" prefWidth="580.0">
                                  <columns>
                                     <TableColumn fx:id="trseriesName" maxWidth="178.0" minWidth="178.0" prefWidth="178.0" text="Series">
                                        <cellValueFactory>

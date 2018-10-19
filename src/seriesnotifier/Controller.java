@@ -48,9 +48,65 @@ public class Controller {
 
     /*
      * TODO: when a new association is created the dropdown should be limited to only show the series that are not connected also double check that in the sql code
-     * TODO: Create a Client that has a Login
-     * TODO: Client add new Series
+     * TODO: Client add new Series to user
      */
+    /***************
+     * Below this point are all functions that can be activated with buttons in the client
+     ***************/
+
+    /**
+     * This function is started when the application is initialized
+     */
+    public void initialize(){
+        table.setRowFactory(new Callback<>() {
+            @Override
+            public TableRow<ResultDataType> call(TableView<ResultDataType> tableView) {
+
+                return new TableRow<>() {
+                    @Override
+                    protected void updateItem(ResultDataType person, boolean empty) {
+                        super.updateItem(person, empty);
+                        if (person != null && (person.getCurrentepisode() > Integer.parseInt(person.getUsersepisode()) || person.getCurrentseason() > Integer.parseInt(person.getUsersseason()))) {
+                            if (!getStyleClass().contains("highlightedRow")) {
+                                getStyleClass().add("highlightedRow");
+                            }
+                        } else {
+                            getStyleClass().removeAll(Collections.singleton("highlightedRow"));
+                            getStyleClass().add("defaultTableStyle");
+                        }
+                    }
+                };
+            }
+        });
+
+        truserSeason.setCellValueFactory(new PropertyValueFactory<>("usersseason"));
+
+        truserSeason.setOnEditCommit(
+                (TableColumn.CellEditEvent<ResultDataType, String> t) -> {
+                    if (isInteger(t.getNewValue())) {
+                        t.getTableView().getItems().get(t.getTablePosition().getRow()).setUsersseason(t.getNewValue());
+                        updateCurrentSeason(t.getNewValue(), trseriesName.getCellData(t.getRowValue()));
+                        t.getTableView().getColumns().get(0).setVisible(false);
+                        t.getTableView().getColumns().get(0).setVisible(true);
+                    }
+                }
+        );
+        truserSeason.setCellFactory(TextFieldTableCell.forTableColumn());
+
+        truserEpisode.setCellValueFactory(new PropertyValueFactory<>("usersepisode"));
+
+        truserEpisode.setOnEditCommit(
+                (TableColumn.CellEditEvent<ResultDataType, String> t) -> {
+                    if(isInteger(t.getNewValue())){
+                        t.getTableView().getItems().get(t.getTablePosition().getRow()).setUsersepisode(t.getNewValue());
+                        updateCurrentEpisode(t.getNewValue(), trseriesName.getCellData(t.getRowValue()));
+                        t.getTableView().getColumns().get(0).setVisible(false);
+                        t.getTableView().getColumns().get(0).setVisible(true);
+                    }
+                }
+        );
+        truserEpisode.setCellFactory(TextFieldTableCell.forTableColumn());
+    }
 
     /**
      * This Function creates a new entry into the table users
@@ -82,17 +138,17 @@ public class Controller {
         }
     }
 
-
+    /**
+     * creates a new user in the client
+     */
     public void registerUser(){
         addNewUser();
         changePanel();
     }
 
-    private void changePanel(){
-        contentPane.setVisible(true);
-        loginPane.setVisible(false);
-    }
-
+    /**
+     * logs one user into the client
+     */
     public void loginUser(){
         //checks if user exists
         Statement stmt;
@@ -112,13 +168,13 @@ public class Controller {
             e.printStackTrace();
         }
 
-
         if(logdinusername != null){
             fillTableClient();
             changePanel();
         }
 
     }
+
     /**
      * This Function creates a new entry into the table series
      */
@@ -298,6 +354,7 @@ public class Controller {
             e.printStackTrace();
         }
     }
+
     /**
      * This Funcition removes the currentrly selected row
      */
@@ -331,6 +388,9 @@ public class Controller {
         }
     }
 
+    /**
+     * this is the schema for the table
+     */
     public class ResultDataType {
         private String trseriesname;
         private String usersseason;
@@ -477,72 +537,11 @@ public class Controller {
         return "";
     }
 
-    @FXML
-    void keyPressed(KeyEvent event) {
-        switch (event.getCode()) {
-            case DELETE:
-            case BACK_SPACE:
-                deleteRow();
-                break;
-            default:
-                break;
-        }
-    }
-
     /**
-     * This function is started when the application is initialized
+     * a function that updates the current season in the table userseries
+     * @param newseason
+     * @param seriesname
      */
-    public void initialize(){
-        table.setRowFactory(new Callback<>() {
-            @Override
-            public TableRow<ResultDataType> call(TableView<ResultDataType> tableView) {
-
-                return new TableRow<>() {
-                    @Override
-                    protected void updateItem(ResultDataType person, boolean empty) {
-                        super.updateItem(person, empty);
-                        if (person != null && (person.getCurrentepisode() > Integer.parseInt(person.getUsersepisode()) || person.getCurrentseason() > Integer.parseInt(person.getUsersseason()))) {
-                            if (!getStyleClass().contains("highlightedRow")) {
-                                getStyleClass().add("highlightedRow");
-                            }
-                        } else {
-                            getStyleClass().removeAll(Collections.singleton("highlightedRow"));
-                            getStyleClass().add("defaultTableStyle");
-                        }
-                    }
-                };
-            }
-        });
-
-        truserSeason.setCellValueFactory(new PropertyValueFactory<>("usersseason"));
-
-        truserSeason.setOnEditCommit(
-            (TableColumn.CellEditEvent<ResultDataType, String> t) -> {
-                if (isInteger(t.getNewValue())) {
-                    t.getTableView().getItems().get(t.getTablePosition().getRow()).setUsersseason(t.getNewValue());
-                    updateCurrentSeason(t.getNewValue(), trseriesName.getCellData(t.getRowValue()));
-                    t.getTableView().getColumns().get(0).setVisible(false);
-                    t.getTableView().getColumns().get(0).setVisible(true);
-                }
-            }
-        );
-        truserSeason.setCellFactory(TextFieldTableCell.forTableColumn());
-
-        truserEpisode.setCellValueFactory(new PropertyValueFactory<>("usersepisode"));
-
-        truserEpisode.setOnEditCommit(
-            (TableColumn.CellEditEvent<ResultDataType, String> t) -> {
-                if(isInteger(t.getNewValue())){
-                    t.getTableView().getItems().get(t.getTablePosition().getRow()).setUsersepisode(t.getNewValue());
-                    updateCurrentEpisode(t.getNewValue(), trseriesName.getCellData(t.getRowValue()));
-                    t.getTableView().getColumns().get(0).setVisible(false);
-                    t.getTableView().getColumns().get(0).setVisible(true);
-                }
-            }
-        );
-        truserEpisode.setCellFactory(TextFieldTableCell.forTableColumn());
-    }
-
     private void updateCurrentSeason(String newseason, String seriesname){
         try{
             Statement stmt;
@@ -552,7 +551,11 @@ public class Controller {
             stmt = con.createStatement();
             pstmt = con.prepareStatement("UPDATE seriesusers SET currentseason = ? WHERE personid = (SELECT id FROM users WHERE name = ?) AND seriesid = (SELECT id FROM series WHERE name = ?)");
             pstmt.setInt(1, Integer.parseInt(newseason));
-            pstmt.setString(2, usersshow.getValue());
+            if(logdinusername != null && !"".equals(logdinusername)){
+                pstmt.setString(2, logdinusername);
+            }else{
+                pstmt.setString(2, usersshow.getValue());
+            }
             pstmt.setString(3, seriesname);
             pstmt.executeUpdate();
 
@@ -566,6 +569,9 @@ public class Controller {
         }
     }
 
+    /**
+     * a function that updates the current season in the table userseries
+     */
     private void updateCurrentEpisode(String newepisode, String seriesname){
         try{
             Statement stmt;
@@ -575,7 +581,11 @@ public class Controller {
             stmt = con.createStatement();
             pstmt = con.prepareStatement("UPDATE seriesusers SET currentepisode = ? WHERE personid = (SELECT id FROM users WHERE name = ?) AND seriesid = (SELECT id FROM series WHERE name = ?)");
             pstmt.setInt(1, Integer.parseInt(newepisode));
-            pstmt.setString(2, usersshow.getValue());
+            if(logdinusername != null && !"".equals(logdinusername)){
+                pstmt.setString(2, logdinusername);
+            }else{
+                pstmt.setString(2, usersshow.getValue());
+            }
             pstmt.setString(3, seriesname);
             pstmt.executeUpdate();
 
@@ -589,7 +599,10 @@ public class Controller {
         }
     }
 
-    public static boolean isInteger(String str) {
+    /**
+     * a function that checks if a string is an int
+     */
+    private static boolean isInteger(String str) {
         if (str == null) {
             return false;
         }
@@ -611,4 +624,25 @@ public class Controller {
         }
         return true;
     }
+
+    /**
+     * changes from the loginpanel to the clientpanel
+     */
+    private void changePanel(){
+        contentPane.setVisible(true);
+        loginPane.setVisible(false);
+    }
+
+    @FXML
+    void keyPressed(KeyEvent event) {
+        switch (event.getCode()) {
+            case DELETE:
+            case BACK_SPACE:
+                deleteRow();
+                break;
+            default:
+                break;
+        }
+    }
+
 }
