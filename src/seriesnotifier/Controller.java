@@ -15,6 +15,7 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,7 +36,11 @@ public class Controller {
     @FXML
     private TableView<ResultDataType> table;
     @FXML
+    private TableView<AllSeries> seriesTable;
+    @FXML
     private TableColumn<ResultDataType, String> truserSeason, truserEpisode, trseriesName;
+    @FXML
+    private TableColumn<AllSeries, String>seriesTableName;
     @FXML
     private TabPane contentPane, loginPane;
 
@@ -47,12 +52,79 @@ public class Controller {
     private int logdinuserid;
 
     /*
-     * TODO: when a new association is created the dropdown should be limited to only show the series that are not connected also double check that in the sql code
-     * TODO: Client add new Series to user
+     * TODO: save the userid on the pc in a config file if someone logs himself in
+     * TODO: set the notification version into the auto start
+     * TODO: change in the DB to notified after having notified the user
      */
     /***************
      * Below this point are all functions that can be activated with buttons in the client
      ***************/
+
+    /**
+     * fills the table seriestable with all of the series that are not watched at the moment
+     */
+    public void fillSeriesTable(){
+        seriesTable.setRowFactory(new Callback<>() {
+            @Override
+            public TableRow<AllSeries> call(TableView<AllSeries> tableView) {
+
+                return new TableRow<>() {
+                    @Override
+                    protected void updateItem(AllSeries data, boolean empty) {
+                        super.updateItem(data, empty);
+                        getStyleClass().removeAll(Collections.singleton("highlightedRow"));
+                        getStyleClass().add("defaultTableStyle");
+
+                    }
+                };
+            }
+        });
+        Statement stmt;
+        try {
+            if(con == null) {
+                connectDatabase();
+            }
+            stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT name FROM series LEFT JOIN seriesusers s on series.id = s.seriesid AND s.personid ="+logdinuserid+" WHERE s.seriesid is null ;");
+
+            seriesTable.getItems().clear();
+            while (rs.next()) {
+                seriesTable.getItems().add(new AllSeries(rs.getString(1)));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void connectUserToSeriesFromTable(){
+        try{
+            if(con == null) {
+                connectDatabase();
+            }
+            AllSeries selectedItem = seriesTable.getSelectionModel().getSelectedItem();
+            if(selectedItem == null || selectedItem.trseriesname == null){
+                return;
+            }
+            pstmt = con.prepareStatement(
+                    "INSERT INTO seriesusers (seriesid, personid, currentseason, currentepisode)" +
+                            "SELECT (SELECT id FROM series WHERE name = ? LIMIT 1), ?, 0, 0 " +
+                            "WHERE NOT EXISTS (SELECT id FROM seriesusers as su WHERE su.seriesid = (SELECT series.id FROM series WHERE series.name = ? LIMIT 1) AND su.personid = ?);");
+
+            pstmt.setString(1, selectedItem.trseriesname);
+            pstmt.setInt(2, logdinuserid);
+            pstmt.setString(3, selectedItem.trseriesname);
+            pstmt.setInt(4, logdinuserid);
+            pstmt.executeUpdate();
+        }catch (SQLException ex) {
+            // handle any errors
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        } finally {
+            closeStatement();
+            fillSeriesTable();
+        }
+    }
 
     /**
      * This function is started when the application is initialized
@@ -282,12 +354,15 @@ public class Controller {
             stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT id, link FROM series;");
             while (rs.next()) {
+                //updates all of the series episodes
                 int season = getCurrentSeason(rs.getString("link"));
                 int episode = getCurrentEpisode(rs.getString("link"),season);
-                pstmt = con.prepareStatement("UPDATE series SET currentseason = ?, currentepisode = ? WHERE id = ?");
+                pstmt = con.prepareStatement("UPDATE series s JOIN seriesusers su ON s.id = su.seriesid SET s.currentseason = ?, s.currentepisode = ? , su.notified = false WHERE s.id = ? AND (NOT s.currentseason = ? or NOT s.currentepisode = ?) ");
                 pstmt.setInt(1, season);
                 pstmt.setInt(2, episode);
                 pstmt.setInt(3, rs.getInt("id"));
+                pstmt.setInt(4, season);
+                pstmt.setInt(5, episode);
                 pstmt.executeUpdate();
             }
         }catch (SQLException ex) {
@@ -298,7 +373,27 @@ public class Controller {
         } finally {
             closeStatement();
         }
-        fillTable();
+        if(table != null){
+            fillTable();
+        }
+    }
+
+    public ArrayList<String> getAllSeriesToNotifie(int person){
+        ArrayList<String> returnvalue = new ArrayList<String>();
+        Statement stmt;
+        try {
+            if(con == null) {
+                connectDatabase();
+            }
+            stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT name FROM seriesusers LEFT JOIN series s on seriesusers.seriesid = s.id WHERE NOT notified and personid = "+person);
+            while (rs.next()) {
+                returnvalue.add(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return returnvalue;
     }
 
     /**
@@ -359,9 +454,14 @@ public class Controller {
      * This Funcition removes the currentrly selected row
      */
     public void deleteRow(){
+        String selecteduser;
         ResultDataType selectedItem = table.getSelectionModel().getSelectedItem();
-        if(usersshow == null || usersshow.getValue() == null || selectedItem == null || selectedItem.trseriesname == null){
+        if( selectedItem == null || selectedItem.trseriesname == null){
             return;
+        }else if(usersshow == null || usersshow.getValue() == null){
+            selecteduser = logdinusername;
+        }else{
+            selecteduser = usersshow.getValue();
         }
         try{
             //remove from DB
@@ -371,7 +471,7 @@ public class Controller {
             }
             stmt = con.createStatement();
             pstmt = con.prepareStatement("DELETE FROM seriesusers WHERE personid = (SELECT id FROM users WHERE name = ?) AND seriesid = (SELECT id FROM series WHERE name = ?)");
-            pstmt.setString(1, usersshow.getValue());
+            pstmt.setString(1,selecteduser);
             pstmt.setString(2, selectedItem.trseriesname);
             pstmt.executeUpdate();
 
@@ -431,6 +531,24 @@ public class Controller {
 
         public void setUsersepisode(String usersepisode) {
             this.usersepisode = usersepisode;
+        }
+    }
+
+    /**
+     * this is the schema for the table where all of the series are displayed
+     */
+    public class AllSeries {
+        private String trseriesname;
+        AllSeries(String trseriesname) {
+            this.trseriesname = trseriesname ;
+        }
+
+        public String getTrseriesname() {
+            return trseriesname;
+        }
+
+        public void setTrseriesname(String trseriesname) {
+            this.trseriesname = trseriesname;
         }
     }
 

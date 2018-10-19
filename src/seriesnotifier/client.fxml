@@ -85,7 +85,7 @@
       </TabPane>
       <TabPane fx:id="contentPane" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" visible="false">
         <tabs>
-          <Tab text="Table">
+          <Tab onSelectionChanged="#fillTableClient" text="Show marked Series">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -132,9 +132,25 @@
                      </children></AnchorPane>
             </content>
           </Tab>
-          <Tab text="Add new Series">
+          <Tab onSelectionChanged="#fillSeriesTable" text="Add new Series">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <VBox layoutX="10.0" layoutY="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
+                           <children>
+                              <Label text="Add new Series" />
+                              <TableView fx:id="seriesTable" onMouseClicked="#connectUserToSeriesFromTable" prefHeight="300.0" prefWidth="580.0">
+                                <columns>
+                                  <TableColumn fx:id="seriesTableName" prefWidth="578.0" text="Seriesname">
+                                      <cellValueFactory>
+                                          <PropertyValueFactory property="trseriesname" />
+                                      </cellValueFactory>
+                                  </TableColumn>
+                                </columns>
+                              </TableView>
+                           </children>
+                        </VBox>
+                     </children></AnchorPane>
             </content>
           </Tab>
         </tabs>
