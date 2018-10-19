@@ -22,17 +22,23 @@ private static String mode;
             //updates all the series
             Controller con = new Controller();
             con.updateSeries();
+            //gets the last loggdin person from the file user.txt
+            String usermd5 = con.readFile("user.txt");
+            usermd5 = usermd5.replace("\n","");
+            int userid = con.getUserIdFromMD5(usermd5);
             //gets all new episodes
-            ArrayList<String> updatedSeries = con.getAllSeriesToNotifie(1);
+            ArrayList<String> updatedSeries = con.getAllSeriesToNotifie(userid);
             String message = "The following Series you are watching have been updated: ";
             //writes a new notification message
             for(String updateserie:updatedSeries){
                 message = message + "\n"+updateserie;
             }
+            //displays a new notification
             if(updatedSeries.size() != 0){
                 displayTray("New Episodes",message);
             }
-            //displays a new notification
+            // TODO: change in the DB to notified after having notified the user
+
             System.exit(0);
             return;
         }else{
@@ -53,7 +59,7 @@ private static String mode;
         launch(args);
     }
 
-    public static void displayTray(String caption, String message) throws AWTException, MalformedURLException {
+    private void displayTray(String caption, String message) throws AWTException, MalformedURLException {
         //Obtain only one instance of the SystemTray object
         SystemTray tray = SystemTray.getSystemTray();
 

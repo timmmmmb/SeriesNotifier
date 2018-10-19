@@ -10,10 +10,11 @@ import javafx.scene.input.KeyEvent;
 import javafx.util.Callback;
 import org.apache.commons.io.IOUtils;
 
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 
+import java.security.MessageDigest;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,11 +52,6 @@ public class Controller {
     private String logdinusername;
     private int logdinuserid;
 
-    /*
-     * TODO: save the userid on the pc in a config file if someone logs himself in
-     * TODO: set the notification version into the auto start
-     * TODO: change in the DB to notified after having notified the user
-     */
     /***************
      * Below this point are all functions that can be activated with buttons in the client
      ***************/
@@ -200,6 +196,17 @@ public class Controller {
             pstmt.setString(2, usermail.getText());
             pstmt.setString(3, userpassword.getText());
             pstmt.executeUpdate();
+
+            Statement stmt;
+            stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE password = '"+ userpassword.getText()+"' AND name = '"+username.getText()+"'" );
+
+            while (rs.next()) {
+                logdinuserid = rs.getInt("id");
+                logdinusername = rs.getString("name");
+                //write userid into a config file
+                svaeUserIdToFile();
+            }
         }catch (SQLException ex) {
             // handle any errors
             System.out.println("SQLException: " + ex.getMessage());
@@ -233,7 +240,9 @@ public class Controller {
 
             while (rs.next()) {
                 logdinuserid = rs.getInt("id");
-                logdinusername = rs.getString("name");;
+                logdinusername = rs.getString("name");
+                //write userid into a config file
+                svaeUserIdToFile();
             }
 
         } catch (SQLException e) {
@@ -486,6 +495,27 @@ public class Controller {
             //remove from table
             table.getItems().remove(selectedItem);
         }
+    }
+
+    public int getUserIdFromMD5(String usermd5) {
+        int result = 0;
+        //checks if user exists
+        Statement stmt;
+        try {
+            if(con == null) {
+                connectDatabase();
+            }
+            stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT  id FROM users WHERE MD5(CONCAT(id,' ',name)) = '"+ usermd5+"';");
+
+            while (rs.next()) {
+                result = rs.getInt("id");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     /**
@@ -751,6 +781,59 @@ public class Controller {
         loginPane.setVisible(false);
     }
 
+    private void svaeUserIdToFile(){
+        try{
+            try (PrintWriter out = new PrintWriter("user.txt")) {
+                out.println(md5(logdinuserid+" "+logdinusername));
+            }
+        }catch(Exception e){
+            System.out.println(e);
+        }
+    }
+
+    private static String md5( String source ) {
+        try {
+            MessageDigest md = MessageDigest.getInstance( "MD5" );
+            byte[] bytes = md.digest( source.getBytes("UTF-8") );
+            return getString( bytes );
+        } catch( Exception e )  {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static String getString( byte[] bytes )
+    {
+        StringBuffer sb = new StringBuffer();
+        for( int i=0; i<bytes.length; i++ )
+        {
+            byte b = bytes[ i ];
+            String hex = Integer.toHexString((int) 0x00FF & b);
+            if (hex.length() == 1)
+            {
+                sb.append("0");
+            }
+            sb.append( hex );
+        }
+        return sb.toString();
+    }
+
+    public String readFile(String fileName) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(fileName));
+        try {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                sb.append("\n");
+                line = br.readLine();
+            }
+            return sb.toString();
+        } finally {
+            br.close();
+        }
+    }
     @FXML
     void keyPressed(KeyEvent event) {
         switch (event.getCode()) {
