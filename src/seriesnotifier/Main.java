@@ -5,8 +5,12 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import net.jimmc.jshortcut.JShellLink;
 
 import java.awt.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 
@@ -56,6 +60,18 @@ private static String mode;
         }else{
             mode = "";
         }
+        try {
+
+            JShellLink link = new JShellLink();
+            String filePath = JShellLink.getDirectory("") + new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            link.setFolder(System.getProperty("user.home")+"\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"); //get startup folder
+            link.setName("SeriesNotifier");
+            link.setPath(filePath);
+            link.setArguments("notify");
+            link.save();
+        } catch (Exception e) {
+
+        }
         launch(args);
     }
 
@@ -78,4 +94,7 @@ private static String mode;
         trayIcon.displayMessage(caption, message, TrayIcon.MessageType.INFO);
         tray.remove(trayIcon);
     }
+
+
+
 }
