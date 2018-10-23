@@ -18,9 +18,9 @@ private static String mode;
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root;
-        /*if("admin".equals(mode)){
+        if("admin".equals(mode)){
             root = FXMLLoader.load(getClass().getResource("adminclient.fxml"));
-        }else*/ if("notify".equals(mode)){
+        }else if("notify".equals(mode)){
             //updates all the series
             Controller con = new Controller();
             con.updateSeries();

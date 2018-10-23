@@ -101,11 +101,7 @@ public class Controller {
             if(selectedItem == null || selectedItem.trseriesname == null){
                 return;
             }
-            pstmt = con.prepareStatement(
-                    "INSERT INTO seriesusers (seriesid, personid, currentseason, currentepisode)" +
-                            "SELECT (SELECT id FROM series WHERE name = ? LIMIT 1), ?, 0, 0 " +
-                            "WHERE NOT EXISTS (SELECT id FROM seriesusers as su WHERE su.seriesid = (SELECT series.id FROM series WHERE series.name = ? LIMIT 1) AND su.personid = ?);");
-
+            pstmt = con.prepareStatement("INSERT INTO seriesusers (seriesid, personid, currentseason, currentepisode) SELECT (SELECT id FROM series WHERE name = ? LIMIT 1), ?, 0, 0 FROM seriesusers WHERE NOT EXISTS (SELECT s.id FROM seriesusers su LEFT JOIN series s ON s.id = su.seriesid WHERE s.name = ? AND su.personid = ?);");
             pstmt.setString(1, selectedItem.trseriesname);
             pstmt.setInt(2, logdinuserid);
             pstmt.setString(3, selectedItem.trseriesname);
@@ -329,11 +325,7 @@ public class Controller {
             if(con == null) {
                 connectDatabase();
             }
-            pstmt = con.prepareStatement(
-                    "INSERT INTO seriesusers (seriesid, personid, currentseason, currentepisode)" +
-                            "SELECT (SELECT id FROM series WHERE name = ? LIMIT 1), (SELECT id FROM users WHERE name = ? LIMIT 1), ?, ? " +
-                            "WHERE NOT EXISTS (SELECT id FROM seriesusers as su WHERE su.seriesid = (SELECT series.id FROM series WHERE series.name = ? LIMIT 1) AND su.personid = (SELECT users.id FROM users WHERE users.name = ? LIMIT 1));");
-
+            pstmt = con.prepareStatement("INSERT INTO seriesusers (seriesid, personid, currentseason, currentepisode) SELECT (SELECT id FROM series WHERE name = ? LIMIT 1), (SELECT id FROM users WHERE name = ? LIMIT 1), ?, ? FROM seriesusers WHERE NOT EXISTS (SELECT su.id FROM seriesusers as su WHERE su.seriesid = (SELECT series.id FROM series WHERE series.name = ? LIMIT 1) AND su.personid = (SELECT users.id FROM users WHERE users.name = ? LIMIT 1));");
             pstmt.setString(1, serieslist.getSelectionModel().getSelectedItem());
             pstmt.setString(2, userlist.getSelectionModel().getSelectedItem());
             pstmt.setInt(3, Integer.parseInt(seriesseason.getText()));
