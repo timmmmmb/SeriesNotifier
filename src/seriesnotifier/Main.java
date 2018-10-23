@@ -9,9 +9,7 @@ import net.jimmc.jshortcut.JShellLink;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 public class Main extends Application {
@@ -20,9 +18,9 @@ private static String mode;
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root;
-        if("admin".equals(mode)){
+        /*if("admin".equals(mode)){
             root = FXMLLoader.load(getClass().getResource("adminclient.fxml"));
-        }else if("notify".equals(mode)){
+        }else*/ if("notify".equals(mode)){
             //updates all the series
             Controller con = new Controller();
             con.updateSeries();
@@ -32,20 +30,35 @@ private static String mode;
             int userid = con.getUserIdFromMD5(usermd5);
             //gets all new episodes
             ArrayList<String> updatedSeries = con.getAllSeriesToNotifie(userid);
-            String message = "The following Series you are watching have been updated: ";
+            StringBuilder message = new StringBuilder("The following Series you are watching have been updated: ");
             //writes a new notification message
             for(String updateserie:updatedSeries){
-                message = message + "\n"+updateserie;
+                message.append("\n").append(updateserie);
             }
             //displays a new notification
             if(updatedSeries.size() != 0){
-                displayTray("New Episodes",message);
+                displayTray(message.toString());
             }
-            // TODO: change in the DB to notified after having notified the user
-
+            con.afterNotifie(userid);
+            System.exit(0);
+            return;
+        }else if("update".equals(mode)){
+            Controller con = new Controller();
+            con.updateSeries();
             System.exit(0);
             return;
         }else{
+            try {
+                JShellLink link = new JShellLink();
+                String filePath = JShellLink.getDirectory("") + new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+                link.setFolder(System.getProperty("user.home") + "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup");
+                link.setName("SeriesNotifier");
+                link.setPath(filePath);
+                link.setArguments("notify");
+                link.save();
+            } catch (URISyntaxException e) {
+                System.out.println(e.getMessage());
+            }
             root = FXMLLoader.load(getClass().getResource("client.fxml"));
         }
         primaryStage.setTitle("Series Notifier");
@@ -53,29 +66,16 @@ private static String mode;
         primaryStage.show();
     }
 
-
     public static void main(String[] args) {
         if(args.length != 0){
             mode = args[0];
         }else{
             mode = "";
         }
-        try {
-
-            JShellLink link = new JShellLink();
-            String filePath = JShellLink.getDirectory("") + new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-            link.setFolder(System.getProperty("user.home")+"\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"); //get startup folder
-            link.setName("SeriesNotifier");
-            link.setPath(filePath);
-            link.setArguments("notify");
-            link.save();
-        } catch (Exception e) {
-
-        }
         launch(args);
     }
 
-    private void displayTray(String caption, String message) throws AWTException, MalformedURLException {
+    private void displayTray(String message) throws AWTException {
         //Obtain only one instance of the SystemTray object
         SystemTray tray = SystemTray.getSystemTray();
 
@@ -91,7 +91,7 @@ private static String mode;
         trayIcon.setToolTip("SeriesNotifier");
         tray.add(trayIcon);
 
-        trayIcon.displayMessage(caption, message, TrayIcon.MessageType.INFO);
+        trayIcon.displayMessage("New Episodes", message, TrayIcon.MessageType.INFO);
         tray.remove(trayIcon);
     }
 

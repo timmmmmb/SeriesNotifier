@@ -395,7 +395,7 @@ public class Controller {
                 connectDatabase();
             }
             stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT name FROM seriesusers LEFT JOIN series s on seriesusers.seriesid = s.id WHERE NOT notified and personid = "+person);
+            ResultSet rs = stmt.executeQuery("SELECT name FROM seriesusers su LEFT JOIN series s on su.seriesid = s.id WHERE NOT notified and personid = "+person+" and s.currentepisode>su.currentepisode and s.currentseason > su.currentseason");
             while (rs.next()) {
                 returnvalue.add(rs.getString("name"));
             }
@@ -516,6 +516,27 @@ public class Controller {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public void afterNotifie(int userid) {
+        try{
+            Statement stmt;
+            if(con == null) {
+                connectDatabase();
+            }
+            stmt = con.createStatement();
+            pstmt = con.prepareStatement("UPDATE seriesusers SET notified = true WHERE personid = ?");
+            pstmt.setInt(1, userid);
+            pstmt.executeUpdate();
+
+        }catch (SQLException ex) {
+            // handle any errors
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        } finally {
+            closeStatement();
+        }
     }
 
     /**
