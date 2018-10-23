@@ -24,7 +24,7 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
+                        <VBox fx:id="loginBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
                            <children>
                               <Label text="Login" />
                               <GridPane hgap="2.0" prefWidth="560.0" vgap="2.0">
@@ -53,7 +53,7 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0">
                      <children>
-                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
+                        <VBox fx:id="registerBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
                            <children>
                               <Label text="Create new User" />
                               <GridPane hgap="2.0" prefWidth="560.0" vgap="2.0">
@@ -89,10 +89,10 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="580.0" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
+                        <VBox fx:id="tableBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="580.0" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
                            <children>
                               <Label text="Show new Episodes" />
-                              <TableView fx:id="table" editable="true" maxWidth="580.0" minHeight="-Infinity" minWidth="580.0" onKeyPressed="#deleteRow" prefHeight="300.0" prefWidth="580.0">
+                              <TableView fx:id="table" editable="true" maxWidth="580.0" minHeight="-Infinity" minWidth="580.0" prefHeight="300.0" prefWidth="580.0">
                                  <columns>
                                     <TableColumn fx:id="trseriesName" maxWidth="178.0" minWidth="178.0" prefWidth="178.0" text="Series">
                                        <cellValueFactory>
@@ -139,6 +139,7 @@
                         <VBox layoutX="10.0" layoutY="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0">
                            <children>
                               <Label text="Add new Series" />
+                              <TextField fx:id="filterField1" />
                               <TableView fx:id="seriesTable" onMouseClicked="#connectUserToSeriesFromTable" prefHeight="300.0" prefWidth="580.0">
                                 <columns>
                                   <TableColumn fx:id="seriesTableName" prefWidth="578.0" text="Seriesname">

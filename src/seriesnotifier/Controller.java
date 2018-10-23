@@ -2,11 +2,15 @@ package seriesnotifier;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.apache.commons.io.IOUtils;
 
@@ -44,17 +48,158 @@ public class Controller {
     private TableColumn<AllSeries, String>seriesTableName;
     @FXML
     private TabPane contentPane, loginPane;
+    @FXML
+    private TextField filterField1;
+    @FXML
+    private VBox loginBox, registerBox, tableBox;
 
     //this objects are used for accessing the DB
     private Connection con = null;
     private PreparedStatement pstmt = null;
-
+    public ObservableList<AllSeries> allSeries = FXCollections.observableArrayList();
     private String logdinusername;
     private int logdinuserid;
 
     /***************
      * Below this point are all functions that can be activated with buttons in the client
      ***************/
+
+    /**
+     * This function is started when the application is initialized
+     */
+    @FXML
+    private void initialize(){
+        //adds on keypressedevent listeners to the vboxes
+        tableBox.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            public void handle(final KeyEvent keyEvent) {
+                switch (keyEvent.getCode()) {
+                    case DELETE:
+                    case BACK_SPACE:
+                        deleteRow();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        registerBox.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            public void handle(final KeyEvent keyEvent) {
+                switch (keyEvent.getCode()) {
+                    case ENTER:
+                        registerUser();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        loginBox.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            public void handle(final KeyEvent keyEvent) {
+                switch (keyEvent.getCode()) {
+                    case ENTER:
+                        loginUser();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        table.setRowFactory(new Callback<>() {
+            @Override
+            public TableRow<ResultDataType> call(TableView<ResultDataType> tableView) {
+
+                return new TableRow<>() {
+                    @Override
+                    protected void updateItem(ResultDataType person, boolean empty) {
+                        super.updateItem(person, empty);
+                        if (person != null && (person.getCurrentepisode() > Integer.parseInt(person.getUsersepisode()) || person.getCurrentseason() > Integer.parseInt(person.getUsersseason()))) {
+                            if (!getStyleClass().contains("highlightedRow")) {
+                                getStyleClass().add("highlightedRow");
+                            }
+                        } else {
+                            getStyleClass().removeAll(Collections.singleton("highlightedRow"));
+                            getStyleClass().add("defaultTableStyle");
+                        }
+                    }
+                };
+            }
+        });
+
+        truserSeason.setCellValueFactory(new PropertyValueFactory<>("usersseason"));
+        truserSeason.setOnEditCommit(
+                (TableColumn.CellEditEvent<ResultDataType, String> t) -> {
+                    if (isInteger(t.getNewValue())) {
+                        t.getTableView().getItems().get(t.getTablePosition().getRow()).setUsersseason(t.getNewValue());
+                        updateCurrentSeason(t.getNewValue(), trseriesName.getCellData(t.getRowValue()));
+                        t.getTableView().getColumns().get(0).setVisible(false);
+                        t.getTableView().getColumns().get(0).setVisible(true);
+                    }
+                }
+        );
+        truserSeason.setCellFactory(TextFieldTableCell.forTableColumn());
+
+        truserEpisode.setCellValueFactory(new PropertyValueFactory<>("usersepisode"));
+        truserEpisode.setOnEditCommit(
+                (TableColumn.CellEditEvent<ResultDataType, String> t) -> {
+                    if(isInteger(t.getNewValue())){
+                        t.getTableView().getItems().get(t.getTablePosition().getRow()).setUsersepisode(t.getNewValue());
+                        updateCurrentEpisode(t.getNewValue(), trseriesName.getCellData(t.getRowValue()));
+                        t.getTableView().getColumns().get(0).setVisible(false);
+                        t.getTableView().getColumns().get(0).setVisible(true);
+                    }
+                }
+        );
+        truserEpisode.setCellFactory(TextFieldTableCell.forTableColumn());
+
+        // 1. Wrap the ObservableList in a FilteredList (initially display all data).
+        FilteredList<AllSeries> filteredData = new FilteredList<>(allSeries, p -> true);
+
+        // 2. Set the filter Predicate whenever the filter changes.
+        filterField1.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredData.setPredicate(person -> {
+                // If filter text is empty, display all persons.
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+
+                // Compare first name and last name of every person with filter text.
+                String lowerCaseFilter = newValue.toLowerCase();
+
+                if (person.getTrseriesname().toLowerCase().contains(lowerCaseFilter)) {
+                    return true; // Filter matches series name
+                }
+                return false; // Does not match.
+            });
+        });
+
+        // 3. Wrap the FilteredList in a SortedList.
+        SortedList<AllSeries> sortedData = new SortedList<>(filteredData);
+
+        // 4. Bind the SortedList comparator to the TableView comparator.
+        sortedData.comparatorProperty().bind(seriesTableName.getTableView().comparatorProperty());
+
+        // 5. Add sorted (and filtered) data to the table.
+        seriesTableName.getTableView().setItems(sortedData);
+    }
+
+    /**
+     * creates a connection to the Database
+     * @throws SQLException
+     */
+    private void connectDatabase(){
+        try{
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/notifier?useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC","root","root");
+            System.out.println("Connected");
+        } catch (SQLException ex) {
+            // handle any errors
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
+    }
 
     /**
      * fills the table seriestable with all of the series that are not watched at the moment
@@ -81,11 +226,11 @@ public class Controller {
                 connectDatabase();
             }
             stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT name FROM series LEFT JOIN seriesusers s on series.id = s.seriesid AND s.personid ="+logdinuserid+" WHERE s.seriesid is null ;");
+            ResultSet rs = stmt.executeQuery("SELECT name FROM series LEFT JOIN seriesusers s on series.id = s.seriesid AND s.personid ="+logdinuserid+" WHERE s.seriesid is null ORDER BY name;");
 
-            seriesTable.getItems().clear();
+            allSeries.clear();
             while (rs.next()) {
-                seriesTable.getItems().add(new AllSeries(rs.getString(1)));
+                allSeries.add(new AllSeries(rs.getString(1)));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -119,90 +264,44 @@ public class Controller {
     }
 
     /**
-     * This function is started when the application is initialized
+     * This Function creates a new entry into the table users
      */
-    public void initialize(){
-        table.setRowFactory(new Callback<>() {
-            @Override
-            public TableRow<ResultDataType> call(TableView<ResultDataType> tableView) {
+    public void addNewUser() throws SQLException {
+        if(con == null) {
+            connectDatabase();
+        }
+        pstmt = con.prepareStatement(
+                "INSERT INTO users (name, email, password)" +
+                        "VALUES (?, ?, ?);");
 
-                return new TableRow<>() {
-                    @Override
-                    protected void updateItem(ResultDataType person, boolean empty) {
-                        super.updateItem(person, empty);
-                        if (person != null && (person.getCurrentepisode() > Integer.parseInt(person.getUsersepisode()) || person.getCurrentseason() > Integer.parseInt(person.getUsersseason()))) {
-                            if (!getStyleClass().contains("highlightedRow")) {
-                                getStyleClass().add("highlightedRow");
-                            }
-                        } else {
-                            getStyleClass().removeAll(Collections.singleton("highlightedRow"));
-                            getStyleClass().add("defaultTableStyle");
-                        }
-                    }
-                };
-            }
-        });
+        pstmt.setString(1, username.getText());
+        pstmt.setString(2, usermail.getText());
+        pstmt.setString(3, userpassword.getText());
+        pstmt.executeUpdate();
 
-        truserSeason.setCellValueFactory(new PropertyValueFactory<>("usersseason"));
+        Statement stmt;
+        stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE password = '"+ userpassword.getText()+"' AND name = '"+username.getText()+"'" );
 
-        truserSeason.setOnEditCommit(
-                (TableColumn.CellEditEvent<ResultDataType, String> t) -> {
-                    if (isInteger(t.getNewValue())) {
-                        t.getTableView().getItems().get(t.getTablePosition().getRow()).setUsersseason(t.getNewValue());
-                        updateCurrentSeason(t.getNewValue(), trseriesName.getCellData(t.getRowValue()));
-                        t.getTableView().getColumns().get(0).setVisible(false);
-                        t.getTableView().getColumns().get(0).setVisible(true);
-                    }
-                }
-        );
-        truserSeason.setCellFactory(TextFieldTableCell.forTableColumn());
+        while (rs.next()) {
+            logdinuserid = rs.getInt("id");
+            logdinusername = rs.getString("name");
+            //write userid into a config file
+            svaeUserIdToFile();
+        }
 
-        truserEpisode.setCellValueFactory(new PropertyValueFactory<>("usersepisode"));
-
-        truserEpisode.setOnEditCommit(
-                (TableColumn.CellEditEvent<ResultDataType, String> t) -> {
-                    if(isInteger(t.getNewValue())){
-                        t.getTableView().getItems().get(t.getTablePosition().getRow()).setUsersepisode(t.getNewValue());
-                        updateCurrentEpisode(t.getNewValue(), trseriesName.getCellData(t.getRowValue()));
-                        t.getTableView().getColumns().get(0).setVisible(false);
-                        t.getTableView().getColumns().get(0).setVisible(true);
-                    }
-                }
-        );
-        truserEpisode.setCellFactory(TextFieldTableCell.forTableColumn());
     }
 
     /**
-     * This Function creates a new entry into the table users
+     * creates a new user in the client
      */
-    public void addNewUser(){
+    public void registerUser(){
         if("".equals(username.getText())||"".equals(usermail.getText())||"".equals(userpassword.getText())){
             System.out.println("one of the required text fields is empty");
             return;
         }
         try{
-            if(con == null) {
-                connectDatabase();
-            }
-            pstmt = con.prepareStatement(
-                    "INSERT INTO users (name, email, password)" +
-                            "VALUES (?, ?, ?);");
-
-            pstmt.setString(1, username.getText());
-            pstmt.setString(2, usermail.getText());
-            pstmt.setString(3, userpassword.getText());
-            pstmt.executeUpdate();
-
-            Statement stmt;
-            stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE password = '"+ userpassword.getText()+"' AND name = '"+username.getText()+"'" );
-
-            while (rs.next()) {
-                logdinuserid = rs.getInt("id");
-                logdinusername = rs.getString("name");
-                //write userid into a config file
-                svaeUserIdToFile();
-            }
+            addNewUser();
         }catch (SQLException ex) {
             // handle any errors
             System.out.println("SQLException: " + ex.getMessage());
@@ -210,15 +309,8 @@ public class Controller {
             System.out.println("VendorError: " + ex.getErrorCode());
         } finally {
             closeStatement();
+            changePanel();
         }
-    }
-
-    /**
-     * creates a new user in the client
-     */
-    public void registerUser(){
-        addNewUser();
-        changePanel();
     }
 
     /**
@@ -401,8 +493,6 @@ public class Controller {
      * This Function adds fills the Table with the required data from the database
      */
     public void fillTable(){
-        initialize();
-
         Statement stmt;
         try {
             if(con == null) {
@@ -414,7 +504,7 @@ public class Controller {
             stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT  s.name as Series, su.currentseason as 'User Season', su.currentepisode as 'User Episode', s.currentseason as 'Current Season', s.currentepisode as 'Current Episode' FROM series as s\n" +
                     "LEFT JOIN seriesusers as su ON su.seriesid = s.id\n" +
-                    "WHERE su.personid = (SELECT ID FROM users WHERE name = '"+ usersshow.getSelectionModel().getSelectedItem() +"' LIMIT 1);");
+                    "WHERE su.personid = (SELECT ID FROM users WHERE name = '"+ usersshow.getSelectionModel().getSelectedItem() +"' LIMIT 1) ORDER BY s.name;");
 
             table.getItems().clear();
             while (rs.next()) {
@@ -429,8 +519,6 @@ public class Controller {
      * This Function adds fills the Table with the required data from the database
      */
     public void fillTableClient(){
-        initialize();
-
         Statement stmt;
         try {
             if(con == null) {
@@ -440,7 +528,7 @@ public class Controller {
                 return;
             }
             stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT  s.name as Series, su.currentseason as 'User Season', su.currentepisode as 'User Episode', s.currentseason as 'Current Season', s.currentepisode as 'Current Episode' FROM series as s LEFT JOIN seriesusers as su ON su.seriesid = s.id WHERE su.personid = " + logdinuserid);
+            ResultSet rs = stmt.executeQuery("SELECT  s.name as Series, su.currentseason as 'User Season', su.currentepisode as 'User Episode', s.currentseason as 'Current Season', s.currentepisode as 'Current Episode' FROM series as s LEFT JOIN seriesusers as su ON su.seriesid = s.id WHERE su.personid = " + logdinuserid+" ORDER BY name");
 
             table.getItems().clear();
             while (rs.next()) {
@@ -602,22 +690,6 @@ public class Controller {
         try {
             if (pstmt != null) pstmt.close();
         }catch (SQLException ex) {
-            // handle any errors
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
-        }
-    }
-
-    /**
-     * creates a connection to the Database
-     * @throws SQLException
-     */
-    private void connectDatabase(){
-        try{
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/notifier?useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC","root","root");
-            System.out.println("Connected");
-        } catch (SQLException ex) {
             // handle any errors
             System.out.println("SQLException: " + ex.getMessage());
             System.out.println("SQLState: " + ex.getSQLState());
@@ -847,16 +919,4 @@ public class Controller {
             br.close();
         }
     }
-    @FXML
-    void keyPressed(KeyEvent event) {
-        switch (event.getCode()) {
-            case DELETE:
-            case BACK_SPACE:
-                deleteRow();
-                break;
-            default:
-                break;
-        }
-    }
-
 }
