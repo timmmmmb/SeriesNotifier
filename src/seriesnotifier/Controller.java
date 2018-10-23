@@ -101,7 +101,7 @@ public class Controller {
             if(selectedItem == null || selectedItem.trseriesname == null){
                 return;
             }
-            pstmt = con.prepareStatement("INSERT INTO seriesusers (seriesid, personid, currentseason, currentepisode) SELECT (SELECT id FROM series WHERE name = ? LIMIT 1), ?, 0, 0 FROM seriesusers WHERE NOT EXISTS (SELECT s.id FROM seriesusers su LEFT JOIN series s ON s.id = su.seriesid WHERE s.name = ? AND su.personid = ?);");
+            pstmt = con.prepareStatement("INSERT INTO seriesusers (seriesid, personid, currentseason, currentepisode) SELECT (SELECT id FROM series WHERE name = ? LIMIT 1), ?, 0, 0 FROM seriesusers WHERE NOT EXISTS (SELECT s.id FROM seriesusers su LEFT JOIN series s ON s.id = su.seriesid WHERE s.name = ? AND su.personid = ?) LIMIT 1 ;");
             pstmt.setString(1, selectedItem.trseriesname);
             pstmt.setInt(2, logdinuserid);
             pstmt.setString(3, selectedItem.trseriesname);
@@ -387,7 +387,7 @@ public class Controller {
                 connectDatabase();
             }
             stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT name FROM seriesusers su LEFT JOIN series s on su.seriesid = s.id WHERE NOT notified and personid = "+person+" and s.currentepisode>su.currentepisode and s.currentseason > su.currentseason");
+            ResultSet rs = stmt.executeQuery("SELECT name FROM seriesusers su LEFT JOIN series s on su.seriesid = s.id WHERE NOT notified and personid = "+person+" and (s.currentepisode>su.currentepisode or s.currentseason > su.currentseason)");
             while (rs.next()) {
                 returnvalue.add(rs.getString("name"));
             }
