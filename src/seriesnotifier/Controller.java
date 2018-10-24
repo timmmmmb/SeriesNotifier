@@ -51,10 +51,12 @@ public class Controller {
     @FXML
     private TextField filterField1;
     @FXML
+    private Label loginException, registerException;
+    @FXML
     private VBox loginBox, registerBox, tableBox;
 
     //this objects are used for accessing the DB
-    private Connection con = null;
+    private Connection con;
     private PreparedStatement pstmt = null;
     public ObservableList<AllSeries> allSeries = FXCollections.observableArrayList();
     private String logdinusername;
@@ -321,7 +323,7 @@ public class Controller {
             System.out.println("SQLState: " + ex.getSQLState());
             System.out.println("VendorError: " + ex.getErrorCode());
         } catch(DuplicateUserException ex){
-            System.out.println("The username is allready taken");
+            registerException.setText("The username is allready taken");
         } finally{
             closeStatement();
         }
@@ -355,7 +357,7 @@ public class Controller {
             fillTableClient();
             changePanel();
         }else{
-            System.out.println("The username or Password is wrong");
+            loginException.setText("The username or Password is wrong");
         }
 
     }
