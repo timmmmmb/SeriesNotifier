@@ -277,25 +277,24 @@ public class Controller {
         if(con == null) {
             connectDatabase();
         }
-
-        Statement stmt = con.createStatement();;
-        ResultSet rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE name = '"+username.getText()+"'" );
-
+        //checks if the user allready exists
+        pstmt = con.prepareStatement("SELECT  id, name, password FROM users WHERE name = '"+username.getText()+"'");
+        ResultSet rs = pstmt.executeQuery( );
         if (rs.next()){
             throw new DuplicateUserException();
         }
-
-
+        //creates a new user
         pstmt = con.prepareStatement(
                 "INSERT INTO users (name, email, password)" +
                         "VALUES (?, ?, ?);");
-
         pstmt.setString(1, username.getText());
         pstmt.setString(2, usermail.getText());
         pstmt.setString(3, md5(userpassword.getText()));
         pstmt.executeUpdate();
 
-        rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE name = '"+username.getText()+"'" );
+        //gets the id of the newly created user and writes them into the variables
+        pstmt = con.prepareStatement("SELECT  id, name, password FROM users WHERE name = '"+username.getText()+"'");
+        rs = pstmt.executeQuery();
 
         while (rs.next()) {
             logdinuserid = rs.getInt("id");
@@ -334,13 +333,12 @@ public class Controller {
      */
     public void loginUser(){
         //checks if user exists
-        Statement stmt;
         try {
             if(con == null) {
                 connectDatabase();
             }
-            stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE password = '"+ md5(loginuserpassword.getText())+"' AND name = '"+loginusername.getText()+"'" );
+            pstmt = con.prepareStatement("SELECT  id, name, password FROM users WHERE password = '"+ md5(loginuserpassword.getText())+"' AND name = '"+loginusername.getText()+"'");
+            ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
                 logdinuserid = rs.getInt("id");
@@ -598,13 +596,12 @@ public class Controller {
     public int getUserIdFromMD5(String usermd5) {
         int result = 0;
         //checks if user exists
-        Statement stmt;
         try {
             if(con == null) {
                 connectDatabase();
             }
-            stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT  id FROM users WHERE MD5(CONCAT(id,' ',name)) = '"+ usermd5+"';");
+            pstmt = con.prepareStatement("SELECT  id FROM users WHERE MD5(CONCAT(id,' ',name)) = '"+ usermd5+"';");
+            ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
                 result = rs.getInt("id");
