@@ -107,11 +107,11 @@ public class Controller {
             }
         });
 
-        table.setRowFactory(new Callback<>() {
+        table.setRowFactory(new Callback<TableView<ResultDataType>, TableRow<ResultDataType>>() {
             @Override
             public TableRow<ResultDataType> call(TableView<ResultDataType> tableView) {
 
-                return new TableRow<>() {
+                return new TableRow<ResultDataType>() {
                     @Override
                     protected void updateItem(ResultDataType person, boolean empty) {
                         super.updateItem(person, empty);
@@ -205,11 +205,11 @@ public class Controller {
      * fills the table seriestable with all of the series that are not watched at the moment
      */
     public void fillSeriesTable(){
-        seriesTable.setRowFactory(new Callback<>() {
+        seriesTable.setRowFactory(new Callback<TableView<AllSeries>, TableRow<AllSeries>>() {
             @Override
             public TableRow<AllSeries> call(TableView<AllSeries> tableView) {
 
-                return new TableRow<>() {
+                return new TableRow<AllSeries>() {
                     @Override
                     protected void updateItem(AllSeries data, boolean empty) {
                         super.updateItem(data, empty);
