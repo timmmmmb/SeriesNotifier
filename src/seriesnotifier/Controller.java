@@ -263,25 +263,37 @@ public class Controller {
         }
     }
 
+    private class DuplicateUserException extends Exception {
+        public DuplicateUserException() {
+        }
+    }
+
     /**
      * This Function creates a new entry into the table users
      */
-    public void addNewUser() throws SQLException {
+    public void addNewUser() throws SQLException, DuplicateUserException {
         if(con == null) {
             connectDatabase();
         }
+
+        Statement stmt = con.createStatement();;
+        ResultSet rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE name = '"+username.getText()+"'" );
+
+        if (rs.next()){
+            throw new DuplicateUserException();
+        }
+
+
         pstmt = con.prepareStatement(
                 "INSERT INTO users (name, email, password)" +
                         "VALUES (?, ?, ?);");
 
         pstmt.setString(1, username.getText());
         pstmt.setString(2, usermail.getText());
-        pstmt.setString(3, userpassword.getText());
+        pstmt.setString(3, md5(userpassword.getText()));
         pstmt.executeUpdate();
 
-        Statement stmt;
-        stmt = con.createStatement();
-        ResultSet rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE password = '"+ userpassword.getText()+"' AND name = '"+username.getText()+"'" );
+        rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE name = '"+username.getText()+"'" );
 
         while (rs.next()) {
             logdinuserid = rs.getInt("id");
@@ -302,14 +314,16 @@ public class Controller {
         }
         try{
             addNewUser();
+            changePanel();
         }catch (SQLException ex) {
             // handle any errors
             System.out.println("SQLException: " + ex.getMessage());
             System.out.println("SQLState: " + ex.getSQLState());
             System.out.println("VendorError: " + ex.getErrorCode());
-        } finally {
+        } catch(DuplicateUserException ex){
+            System.out.println("The username is allready taken");
+        } finally{
             closeStatement();
-            changePanel();
         }
     }
 
@@ -324,7 +338,7 @@ public class Controller {
                 connectDatabase();
             }
             stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE password = '"+ loginuserpassword.getText()+"' AND name = '"+loginusername.getText()+"'" );
+            ResultSet rs = stmt.executeQuery("SELECT  id, name, password FROM users WHERE password = '"+ md5(loginuserpassword.getText())+"' AND name = '"+loginusername.getText()+"'" );
 
             while (rs.next()) {
                 logdinuserid = rs.getInt("id");
@@ -340,6 +354,8 @@ public class Controller {
         if(logdinusername != null){
             fillTableClient();
             changePanel();
+        }else{
+            System.out.println("The username or Password is wrong");
         }
 
     }

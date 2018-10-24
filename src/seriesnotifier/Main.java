@@ -15,6 +15,9 @@ import java.util.ArrayList;
 public class Main extends Application {
 private static String mode;
 
+// TODO: use MD5 to save the Password
+// TODO: give an error Message if the login fails if register fails
+
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root;
@@ -94,7 +97,5 @@ private static String mode;
         trayIcon.displayMessage("New Episodes", message, TrayIcon.MessageType.INFO);
         tray.remove(trayIcon);
     }
-
-
 
 }
