@@ -23,11 +23,11 @@ private static String mode;
         }else*/ if("notify".equals(mode)){
             //updates all the series
             Controller con = new Controller();
-            con.updateSeries();
             //gets the last loggdin person from the file user.txt
             String usermd5 = con.readFile("user.txt");
             usermd5 = usermd5.replace("\n","");
             int userid = con.getUserIdFromMD5(usermd5);
+            con.updateSeriesPerUser(userid);
             //gets all new episodes
             ArrayList<String> updatedSeries = con.getAllSeriesToNotifie(userid);
             StringBuilder message = new StringBuilder("The following Series you are watching have been updated: ");
@@ -44,7 +44,15 @@ private static String mode;
             return;
         }else if("update".equals(mode)){
             Controller con = new Controller();
-            con.updateSeries();
+            con.updateAllSeries();
+            System.exit(0);
+            return;
+        }else if("addseries".equals(mode)){
+            Controller con = new Controller();
+            String[] genres = {"Drama","Dramedy","History"};
+            for(String genre:genres){
+                con.getSeries(genre);
+            }
             System.exit(0);
             return;
         }else{

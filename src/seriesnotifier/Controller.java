@@ -15,6 +15,7 @@ import javafx.util.Callback;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -368,18 +369,35 @@ public class Controller {
             System.out.println("one of the required text fields is empty");
             return;
         }
+        addNewSeries(seriesname.getText(),serieslink.getText());
+    }
+
+    /**
+     * This Function creates a new entry into the table series
+     */
+    public void addNewSeries(String name, String link){
+        if("".equals(name)||"".equals(link)){
+            System.out.println("one of the required text fields is empty");
+            return;
+        }
         try{
             if(con == null) {
                 connectDatabase();
+            }
+            //checks if the series allready exists
+            pstmt = con.prepareStatement("SELECT  id, name, link FROM series WHERE name = '"+name+"'");
+            ResultSet rs = pstmt.executeQuery( );
+            if (rs.next()){
+                throw new DuplicateUserException();
             }
             pstmt = con.prepareStatement(
                     "INSERT INTO series (name, link, currentseason, currentepisode)" +
                             "VALUES (?, ?, ?, ?);");
 
-            int currentseason = getCurrentSeason(serieslink.getText());
-            int currentepisode = getCurrentEpisode(serieslink.getText(), currentseason);
-            pstmt.setString(1, seriesname.getText());
-            pstmt.setString(2, serieslink.getText());
+            int currentseason = getCurrentSeason(link);
+            int currentepisode = getCurrentEpisode(link, currentseason);
+            pstmt.setString(1, name);
+            pstmt.setString(2, link);
             pstmt.setInt(3, currentseason);
             pstmt.setInt(4, currentepisode);
             pstmt.executeUpdate();
@@ -388,6 +406,8 @@ public class Controller {
             System.out.println("SQLException: " + ex.getMessage());
             System.out.println("SQLState: " + ex.getSQLState());
             System.out.println("VendorError: " + ex.getErrorCode());
+        } catch (DuplicateUserException e) {
+            System.out.println("Series allready exists");
         } finally {
             closeStatement();
         }
@@ -454,7 +474,7 @@ public class Controller {
     /**
      * This function upadates the current episode and season of all series
      */
-    public void updateSeries(){
+    public void updateAllSeries(){
         try{
             Statement stmt;
             if(con == null) {
@@ -463,16 +483,57 @@ public class Controller {
             stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT id, link FROM series;");
             while (rs.next()) {
-                //updates all of the series episodes
-                int season = getCurrentSeason(rs.getString("link"));
-                int episode = getCurrentEpisode(rs.getString("link"),season);
-                pstmt = con.prepareStatement("UPDATE series s JOIN seriesusers su ON s.id = su.seriesid SET s.currentseason = ?, s.currentepisode = ? , su.notified = false WHERE s.id = ? AND (NOT s.currentseason = ? or NOT s.currentepisode = ?) ");
-                pstmt.setInt(1, season);
-                pstmt.setInt(2, episode);
-                pstmt.setInt(3, rs.getInt("id"));
-                pstmt.setInt(4, season);
-                pstmt.setInt(5, episode);
-                pstmt.executeUpdate();
+                updateSeries(rs.getInt("id"),rs.getString("link"));
+            }
+        }catch (SQLException  ex) {
+            // handle any errors
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }  finally {
+            closeStatement();
+        }
+        if(table != null){
+            fillTable();
+        }
+    }
+
+    public void updateSeries(int id, String link){
+        //added a sleep to not ddos the server from burningseries
+        try {
+
+            System.out.println("Updateing the with the Link: "+link);
+            Thread.sleep(1000);
+            //updates all of the series episodes
+            int season = getCurrentSeason(link);
+            int episode = getCurrentEpisode(link,season);
+            pstmt = con.prepareStatement("UPDATE series s JOIN seriesusers su ON s.id = su.seriesid SET s.currentseason = ?, s.currentepisode = ? , su.notified = false WHERE s.id = ? AND (NOT s.currentseason = ? or NOT s.currentepisode = ?) ");
+            pstmt.setInt(1, season);
+            pstmt.setInt(2, episode);
+            pstmt.setInt(3, id);
+            pstmt.setInt(4, season);
+            pstmt.setInt(5, episode);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * This function upadates the current episode and season of all series
+     */
+    public void updateSingleSeries(String seriesname){
+        try{
+            Statement stmt;
+            if(con == null) {
+                connectDatabase();
+            }
+            stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT id, link FROM series WHERE name = "+seriesname+";");
+            while (rs.next()) {
+                updateSeries(rs.getInt("id"),rs.getString("link"));
             }
         }catch (SQLException ex) {
             // handle any errors
@@ -482,8 +543,30 @@ public class Controller {
         } finally {
             closeStatement();
         }
-        if(table != null){
-            fillTable();
+    }
+
+    /**
+     * Updates all series for one user
+     * @param userid
+     */
+    public void updateSeriesPerUser(int userid) {
+        try{
+            Statement stmt;
+            if(con == null) {
+                connectDatabase();
+            }
+            stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT s.id as id, s.link as link FROM series s LEFT JOIN seriesusers su on su.seriesid = s.id WHERE su.personid = "+userid+";");
+            while (rs.next()) {
+                updateSeries(rs.getInt("id"),rs.getString("link"));
+            }
+        }catch (SQLException ex) {
+            // handle any errors
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        } finally {
+            closeStatement();
         }
     }
 
@@ -783,6 +866,37 @@ public class Controller {
             e.printStackTrace();
         }
         return "";
+    }
+
+    /**
+     * Adds all series of a specific genre into the DB
+     * @param Genre
+     */
+    public void getSeries(String genre){
+        try {
+            URL url = new URL("https://bs.to/andere-serien");
+            String body = getBody(url).replaceAll("\n","").replaceAll("\t","");
+            int start = body.indexOf("<div class=\"genre\"><span><strong>"+genre+"</strong></span><ul>")+("<div class=\"genre\"><span><strong>"+genre+"</strong></span><ul>").length();
+            int end = body.substring(start).indexOf("</ul></div>")+start;
+            body = body.substring(start,end).replaceAll("<li>","").replaceAll("</li>","").replaceAll("</a>","</a>\n");
+            String href = "";
+            String title = "";
+            System.out.println("Adding the following series");
+            for(String singleEntry:body.split("\n")){
+                Thread.sleep(2000);
+                System.out.println(singleEntry);
+                String zwischenresultat = singleEntry.substring(singleEntry.indexOf("href=\"")+6);
+                href = zwischenresultat.substring(0,zwischenresultat.indexOf("\""));
+                System.out.println("HREF: "+href);
+                zwischenresultat = singleEntry.substring(singleEntry.indexOf("title=\"")+7);
+                title = zwischenresultat.substring(0,zwischenresultat.indexOf("\""));
+                System.out.println("TITLE: "+title);
+                //adds this series into the DB
+                addNewSeries(title,"https://bs.to/"+href);
+            }
+        } catch (MalformedURLException | InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
