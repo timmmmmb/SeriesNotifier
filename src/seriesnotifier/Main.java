@@ -71,6 +71,7 @@ private static String mode;
         }
         primaryStage.setTitle("Series Notifier");
         primaryStage.setScene(new Scene(root, 600, 400));
+        primaryStage.setResizable(false);
         primaryStage.show();
     }
 
