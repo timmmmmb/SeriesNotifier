@@ -14,6 +14,16 @@ import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.apache.commons.io.IOUtils;
 
+import java.util.Properties;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -194,7 +204,8 @@ public class Controller {
      */
     private void connectDatabase(){
         try{
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/notifier?useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC","root","root");
+            //con = DriverManager.getConnection("jdbc:mysql://localhost:3306/notifier?useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC","root","root");
+            con = DriverManager.getConnection("jdbc:mysql://sql7.freemysqlhosting.net/sql7261791?useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC","sql7261791","zpJQuWfkf6");
             System.out.println("Connected");
         } catch (SQLException ex) {
             // handle any errors
@@ -204,6 +215,46 @@ public class Controller {
         }
     }
 
+    public void sendMail(String mailto){
+        final String username = "";
+        final String password = "";
+
+        //TODO:gets mail,name from users by username
+
+        //TODO:generate a new Password
+
+        //TODO:Set a new Password
+        //send a mail
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+
+        Session session = Session.getInstance(props,
+                new javax.mail.Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(username, password);
+                    }
+                });
+
+        try {
+
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress("Admin@seriesnotifier.com"));
+            message.setRecipients(Message.RecipientType.TO,
+                    InternetAddress.parse(mailto));
+            message.setSubject("Password Reset for SeriesNotifier");
+            String newpassword ="";
+            message.setText("Dear "+mailto+"\n your password for SeriesNotifier was reset.\n The new Password is:"+newpassword+"\n ");
+            Transport.send(message);
+
+            System.out.println("Done");
+
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
+    }
     /**
      * fills the table seriestable with all of the series that are not watched at the moment
      */

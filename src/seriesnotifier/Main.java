@@ -15,6 +15,10 @@ import java.util.ArrayList;
 public class Main extends Application {
 private static String mode;
 
+    /**
+     * TODO: enable the reset of your password per email
+     */
+
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root;
@@ -53,6 +57,11 @@ private static String mode;
             for(String genre:genres){
                 con.getSeries(genre);
             }
+            System.exit(0);
+            return;
+        }else if("sendmail".equals(mode)){
+            Controller con = new Controller();
+            con.sendMail("");
             System.exit(0);
             return;
         }else{
