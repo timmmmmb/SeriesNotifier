@@ -118,7 +118,7 @@
                     <TextField fx:id="filterField1" />
                     <TableView fx:id="seriesTable" onMouseClicked="#connectUserToSeriesFromTable" prefHeight="300.0" prefWidth="580.0">
                         <columns>
-                            <TableColumn fx:id="seriesTableName" prefWidth="578.0" text="Seriesname">
+                            <TableColumn fx:id="seriesTableName" prefWidth="558.0" text="Seriesname">
                                 <cellValueFactory>
                                     <PropertyValueFactory property="trseriesname" />
                                 </cellValueFactory>

@@ -53,7 +53,7 @@ private static String mode;
             return;
         }else if("addseries".equals(mode)){
             Controller con = new Controller();
-            String[] genres = {"Drama","Dramedy","History"};
+            String[] genres = {"Sitcom"};
             for(String genre:genres){
                 con.getSeries(genre);
             }

@@ -13,6 +13,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.Properties;
 
@@ -222,8 +223,8 @@ public class Controller {
         //TODO:gets mail,name from users by username
 
         //TODO:generate a new Password
-
-        //TODO:Set a new Password
+        String newpassword = RandomStringUtils.randomAscii(32);
+        //TODO:Generate a new code which can be used to reset the password
         //send a mail
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -245,7 +246,7 @@ public class Controller {
             message.setRecipients(Message.RecipientType.TO,
                     InternetAddress.parse(mailto));
             message.setSubject("Password Reset for SeriesNotifier");
-            String newpassword ="";
+
             message.setText("Dear "+mailto+"\n your password for SeriesNotifier was reset.\n The new Password is:"+newpassword+"\n ");
             Transport.send(message);
 
@@ -255,6 +256,7 @@ public class Controller {
             throw new RuntimeException(e);
         }
     }
+
     /**
      * fills the table seriestable with all of the series that are not watched at the moment
      */
@@ -397,6 +399,8 @@ public class Controller {
                 logdinusername = rs.getString("name");
                 //write userid into a config file
                 svaeUserIdToFile();
+                //update all the series this user is watching
+                updateSeriesPerUser(rs.getInt("id"));
             }
 
         } catch (SQLException e) {
@@ -553,8 +557,8 @@ public class Controller {
         //added a sleep to not ddos the server from burningseries
         try {
 
-            System.out.println("Updateing the with the Link: "+link);
-            Thread.sleep(1000);
+            System.out.println("Updateing the Serie with the Link: "+link);
+            Thread.sleep(100);
             //updates all of the series episodes
             int season = getCurrentSeason(link);
             int episode = getCurrentEpisode(link,season);
